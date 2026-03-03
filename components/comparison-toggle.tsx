@@ -9,128 +9,117 @@ import {
   Gauge,
   Lock,
   Globe,
-  Zap,
   Code,
-  Network,
-  Timer,
-  ShieldCheck,
   Sparkles,
+  Check,
+  X,
+  Minus,
 } from "lucide-react"
 
-type ViewMode = "side-by-side" | "evm" | "genvm"
+type ViewMode = "table" | "evm" | "genvm"
 
-interface ComparisonCategory {
-  title: string
+interface ComparisonRow {
+  category: string
   icon: React.ElementType
   evm: {
-    label: string
-    description: string
-    rating: number
+    value: string
+    detail: string
+    score: 1 | 2 | 3 | 4 | 5
   }
   genvm: {
-    label: string
-    description: string
-    rating: number
+    value: string
+    detail: string
+    score: 1 | 2 | 3 | 4 | 5
   }
 }
 
-const categories: ComparisonCategory[] = [
+const rows: ComparisonRow[] = [
   {
-    title: "Determinism",
+    category: "Determinism",
     icon: Lock,
     evm: {
-      label: "Fully Deterministic",
-      description:
-        "EVM executes bytecode deterministically. Every node produces the exact same result for the same input. This guarantees consistency but limits what contracts can do.",
-      rating: 5,
+      value: "Fully Deterministic",
+      detail: "Every node produces identical results. Guarantees consistency but limits capabilities.",
+      score: 5,
     },
     genvm: {
-      label: "Non-Deterministic by Design",
-      description:
-        "GenVM embraces non-determinism through LLM integration. Validators may produce different outputs, which is resolved through Optimistic Democracy consensus.",
-      rating: 4,
+      value: "Non-Deterministic by Design",
+      detail: "Embraces non-determinism via LLMs. Resolved through Optimistic Democracy consensus.",
+      score: 4,
     },
   },
   {
-    title: "LLM Integration",
+    category: "LLM Integration",
     icon: Brain,
     evm: {
-      label: "No AI Capabilities",
-      description:
-        "EVM has no built-in support for AI or language models. Smart contracts cannot interpret natural language or make subjective decisions without external oracles.",
-      rating: 1,
+      value: "None",
+      detail: "No built-in AI. Contracts cannot interpret natural language without external oracles.",
+      score: 1,
     },
     genvm: {
-      label: "Native LLM Support",
-      description:
-        "GenVM natively integrates LLMs into the execution environment. Contracts can reason, understand natural language, and make complex AI-driven decisions on-chain.",
-      rating: 5,
+      value: "Native LLM Support",
+      detail: "LLMs integrated into execution. Contracts reason, understand language, and decide on-chain.",
+      score: 5,
     },
   },
   {
-    title: "Consensus Speed",
+    category: "Consensus Speed",
     icon: Gauge,
     evm: {
-      label: "All Nodes Verify",
-      description:
-        "Every node in the network must re-execute every transaction to reach consensus. This creates strong security guarantees but limits throughput and speed.",
-      rating: 3,
+      value: "Full Re-execution",
+      detail: "Every node re-executes every transaction. Strong security but limits throughput.",
+      score: 3,
     },
     genvm: {
-      label: "Optimistic Democracy",
-      description:
-        "Only 5 randomly selected validators process each transaction. A majority vote finalizes the result, with an appeal window for challenges. Faster and more scalable.",
-      rating: 5,
+      value: "Optimistic Democracy",
+      detail: "5 random validators per TX. Majority vote finalizes with appeal window. Much faster.",
+      score: 5,
     },
   },
   {
-    title: "Web Access",
+    category: "Web Access",
     icon: Globe,
     evm: {
-      label: "Isolated Environment",
-      description:
-        "The EVM is completely isolated from the internet. External data requires trusted oracle services, adding cost, latency, and centralization risk.",
-      rating: 1,
+      value: "Isolated / Oracles Only",
+      detail: "Completely isolated from the internet. External data needs costly, centralized oracles.",
+      score: 1,
     },
     genvm: {
-      label: "Internet-Connected",
-      description:
-        "Intelligent Contracts can directly access and reason about web data. No oracles needed for real-world information, enabling a new class of applications.",
-      rating: 5,
+      value: "Internet-Connected",
+      detail: "Contracts access and reason about web data directly. No oracles needed.",
+      score: 5,
     },
   },
   {
-    title: "Contract Language",
+    category: "Contract Language",
     icon: Code,
     evm: {
-      label: "Solidity / Vyper",
-      description:
-        "Requires learning specialized languages like Solidity. High barrier to entry and limited expressiveness for complex logic.",
-      rating: 3,
+      value: "Solidity / Vyper",
+      detail: "Specialized languages with steep learning curve and limited expressiveness.",
+      score: 3,
     },
     genvm: {
-      label: "Python + Natural Language",
-      description:
-        "Write Intelligent Contracts in Python with natural language instructions embedded. Lower barrier to entry and much greater expressiveness.",
-      rating: 5,
+      value: "Python + Natural Language",
+      detail: "Write in Python with embedded natural language instructions. Much lower barrier.",
+      score: 5,
     },
   },
 ]
 
-function RatingBar({ value, maxValue = 5, color }: { value: number; maxValue?: number; color: "primary" | "accent" }) {
+function ScoreDots({ score, variant }: { score: number; variant: "evm" | "genvm" }) {
   return (
-    <div className="flex items-center gap-1.5">
-      {Array.from({ length: maxValue }).map((_, i) => (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: 5 }).map((_, i) => (
         <motion.div
           key={i}
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ delay: i * 0.05 + 0.2 }}
-          className={`h-1.5 w-6 rounded-full ${
-            i < value
-              ? color === "primary"
-                ? "bg-primary"
-                : "bg-accent"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: i * 0.04 + 0.1 }}
+          className={`h-2 w-2 rounded-full ${
+            i < score
+              ? variant === "genvm"
+                ? "bg-accent"
+                : "bg-primary/70"
               : "bg-secondary"
           }`}
         />
@@ -139,48 +128,56 @@ function RatingBar({ value, maxValue = 5, color }: { value: number; maxValue?: n
   )
 }
 
-function ComparisonCard({
-  category,
-  side,
-}: {
-  category: ComparisonCategory
-  side: "evm" | "genvm"
-}) {
-  const data = side === "evm" ? category.evm : category.genvm
-  const Icon = category.icon
-  const isGenvm = side === "genvm"
+function VerdictIcon({ score }: { score: number }) {
+  if (score >= 4) return <Check className="h-4 w-4 text-emerald-400" />
+  if (score >= 3) return <Minus className="h-4 w-4 text-amber-400" />
+  return <X className="h-4 w-4 text-red-400" />
+}
 
+/* ---- Mobile card (shown < md) ---- */
+function MobileRow({ row, mode }: { row: ComparisonRow; mode: ViewMode }) {
+  const Icon = row.icon
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className={`rounded-xl border p-5 transition-colors ${
-        isGenvm
-          ? "border-accent/30 bg-accent/5"
-          : "border-border bg-card/50"
-      }`}
+      className="rounded-xl border border-border/60 bg-card/40 p-4"
     >
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Icon className={`h-4 w-4 ${isGenvm ? "text-accent" : "text-muted-foreground"}`} />
-          <span className="font-mono text-xs tracking-wider text-muted-foreground">
-            {category.title.toUpperCase()}
-          </span>
-        </div>
-        <RatingBar value={data.rating} color={isGenvm ? "accent" : "primary"} />
+      <div className="mb-3 flex items-center gap-2">
+        <Icon className="h-4 w-4 text-primary" />
+        <span className="font-mono text-xs font-medium tracking-wider text-foreground">
+          {row.category.toUpperCase()}
+        </span>
       </div>
-      <h4 className={`mb-2 font-semibold ${isGenvm ? "text-accent" : "text-foreground"}`}>
-        {data.label}
-      </h4>
-      <p className="text-sm leading-relaxed text-muted-foreground">{data.description}</p>
+
+      {(mode === "table" || mode === "evm") && (
+        <div className="mb-3 rounded-lg border border-border/40 bg-secondary/20 p-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="font-mono text-[10px] tracking-widest text-muted-foreground/60">EVM</span>
+            <ScoreDots score={row.evm.score} variant="evm" />
+          </div>
+          <p className="text-sm font-medium text-foreground/80">{row.evm.value}</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{row.evm.detail}</p>
+        </div>
+      )}
+
+      {(mode === "table" || mode === "genvm") && (
+        <div className="rounded-lg border border-accent/20 bg-accent/5 p-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="font-mono text-[10px] tracking-widest text-accent/70">GENVM</span>
+            <ScoreDots score={row.genvm.score} variant="genvm" />
+          </div>
+          <p className="text-sm font-medium text-accent">{row.genvm.value}</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{row.genvm.detail}</p>
+        </div>
+      )}
     </motion.div>
   )
 }
 
 export function ComparisonToggle() {
-  const [mode, setMode] = useState<ViewMode>("side-by-side")
+  const [mode, setMode] = useState<ViewMode>("table")
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null)
 
   return (
     <section id="compare" className="relative px-4 py-24">
@@ -200,19 +197,21 @@ export function ComparisonToggle() {
             EVM vs GenVM
           </h2>
           <p className="mx-auto max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground">
-            See how GenLayer's Intelligent Virtual Machine compares to the traditional
+            See how GenLayer{"'"}s Intelligent Virtual Machine compares to the traditional
             Ethereum Virtual Machine across key dimensions.
           </p>
         </motion.div>
 
-        {/* Toggle buttons */}
+        {/* Toggle */}
         <div className="mb-10 flex items-center justify-center">
           <div className="inline-flex rounded-lg border border-border bg-secondary/30 p-1">
-            {[
-              { key: "evm" as ViewMode, label: "EVM Only", icon: Cpu },
-              { key: "side-by-side" as ViewMode, label: "Side by Side", icon: ArrowLeftRight },
-              { key: "genvm" as ViewMode, label: "GenVM Only", icon: Sparkles },
-            ].map(({ key, label, icon: Icon }) => (
+            {(
+              [
+                { key: "evm" as ViewMode, label: "EVM Only", icon: Cpu },
+                { key: "table" as ViewMode, label: "Side by Side", icon: ArrowLeftRight },
+                { key: "genvm" as ViewMode, label: "GenVM Only", icon: Sparkles },
+              ] as const
+            ).map(({ key, label, icon: BtnIcon }) => (
               <button
                 key={key}
                 onClick={() => setMode(key)}
@@ -222,155 +221,160 @@ export function ComparisonToggle() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <BtnIcon className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{label.toUpperCase()}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Summary cards */}
-        <div className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <AnimatePresence mode="popLayout">
-            {(mode === "side-by-side" || mode === "evm") && (
-              <motion.div
-                layout
-                key="evm-summary"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`rounded-xl border border-border bg-card/50 p-6 ${
-                  mode === "evm" ? "md:col-span-2" : ""
+        {/* ===== DESKTOP TABLE (hidden on mobile) ===== */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={mode}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            className="hidden md:block"
+          >
+            <div className="overflow-hidden rounded-xl border border-border/60 bg-card/30 backdrop-blur-sm">
+              {/* Table header */}
+              <div
+                className={`grid items-center border-b border-border/40 bg-secondary/30 px-6 py-4 font-mono text-[11px] font-medium tracking-widest text-muted-foreground ${
+                  mode === "table"
+                    ? "grid-cols-[200px_1fr_1fr]"
+                    : "grid-cols-[200px_1fr]"
                 }`}
               >
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                    <Cpu className="h-5 w-5 text-muted-foreground" />
+                <div>CATEGORY</div>
+                {(mode === "table" || mode === "evm") && (
+                  <div className="flex items-center gap-2">
+                    <Cpu className="h-3.5 w-3.5" />
+                    EVM (TRADITIONAL)
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">EVM (Traditional)</h3>
-                    <p className="font-mono text-xs text-muted-foreground">Ethereum Virtual Machine</p>
+                )}
+                {(mode === "table" || mode === "genvm") && (
+                  <div className="flex items-center gap-2 text-accent">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    GENVM (INTELLIGENT)
                   </div>
-                </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  The industry-standard deterministic execution environment. Processes Solidity bytecode
-                  identically across all nodes. Battle-tested but fundamentally limited in capabilities.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {["Deterministic", "Isolated", "Solidity", "All-Node Verification"].map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-border bg-secondary/50 px-3 py-1 font-mono text-[10px] tracking-wider text-muted-foreground"
-                    >
-                      {tag.toUpperCase()}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {(mode === "side-by-side" || mode === "genvm") && (
-              <motion.div
-                layout
-                key="genvm-summary"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`rounded-xl border border-accent/30 bg-accent/5 p-6 ${
-                  mode === "genvm" ? "md:col-span-2" : ""
-                }`}
-              >
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/15 glow-cyan">
-                    <Sparkles className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-accent">GenVM (Intelligent)</h3>
-                    <p className="font-mono text-xs text-muted-foreground">Generative Virtual Machine</p>
-                  </div>
-                </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  The next generation AI-powered execution environment. Natively integrates LLMs,
-                  accesses the internet, and processes natural language for a new paradigm of smart contracts.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {["AI-Native", "Web-Connected", "Python", "Optimistic Democracy"].map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 font-mono text-[10px] tracking-wider text-accent/80"
-                    >
-                      {tag.toUpperCase()}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Detailed comparison */}
-        <AnimatePresence mode="popLayout">
-          {mode === "side-by-side" ? (
-            <motion.div
-              key="side-by-side"
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col gap-4"
-            >
-              {categories.map((cat) => (
-                <div key={cat.title} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <ComparisonCard category={cat} side="evm" />
-                  <ComparisonCard category={cat} side="genvm" />
-                </div>
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div
-              key={mode}
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="grid grid-cols-1 gap-4 md:grid-cols-2"
-            >
-              {categories.map((cat) => (
-                <ComparisonCard key={cat.title} category={cat} side={mode} />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Stats bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4"
-        >
-          {[
-            { icon: Network, label: "Validators", evm: "All Nodes", genvm: "5 per TX" },
-            { icon: Timer, label: "Consensus", evm: "Full Re-exec", genvm: "Majority Vote" },
-            { icon: ShieldCheck, label: "Security", evm: "Deterministic", genvm: "Multi-LLM" },
-            { icon: Zap, label: "AI Support", evm: "None", genvm: "Native" },
-          ].map(({ icon: Icon, label, evm, genvm }) => (
-            <div
-              key={label}
-              className="rounded-lg border border-border/50 bg-card/30 p-4 text-center"
-            >
-              <Icon className="mx-auto mb-2 h-5 w-5 text-primary/60" />
-              <div className="mb-2 font-mono text-[10px] tracking-wider text-muted-foreground/60">
-                {label.toUpperCase()}
+                )}
               </div>
-              <div className="flex items-center justify-center gap-2 font-mono text-xs">
-                <span className="text-muted-foreground">{evm}</span>
-                <span className="text-muted-foreground/30">{"/"}</span>
-                <span className="text-accent">{genvm}</span>
+
+              {/* Table rows */}
+              {rows.map((row, idx) => {
+                const Icon = row.icon
+                const isHovered = hoveredRow === idx
+                return (
+                  <motion.div
+                    key={row.category}
+                    onMouseEnter={() => setHoveredRow(idx)}
+                    onMouseLeave={() => setHoveredRow(null)}
+                    className={`grid items-start px-6 py-5 transition-colors ${
+                      mode === "table"
+                        ? "grid-cols-[200px_1fr_1fr]"
+                        : "grid-cols-[200px_1fr]"
+                    } ${idx !== rows.length - 1 ? "border-b border-border/20" : ""} ${
+                      isHovered ? "bg-primary/[0.03]" : ""
+                    }`}
+                  >
+                    {/* Category label */}
+                    <div className="flex items-center gap-3 pt-0.5">
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                        isHovered ? "bg-primary/15" : "bg-secondary/50"
+                      }`}>
+                        <Icon className={`h-4 w-4 transition-colors ${
+                          isHovered ? "text-primary" : "text-muted-foreground"
+                        }`} />
+                      </div>
+                      <span className="font-mono text-xs font-medium tracking-wider text-foreground">
+                        {row.category}
+                      </span>
+                    </div>
+
+                    {/* EVM Column */}
+                    {(mode === "table" || mode === "evm") && (
+                      <div className="pr-6">
+                        <div className="mb-1.5 flex items-center gap-2">
+                          <VerdictIcon score={row.evm.score} />
+                          <span className="text-sm font-medium text-foreground/80">
+                            {row.evm.value}
+                          </span>
+                        </div>
+                        <p className="mb-2 text-xs leading-relaxed text-muted-foreground">
+                          {row.evm.detail}
+                        </p>
+                        <ScoreDots score={row.evm.score} variant="evm" />
+                      </div>
+                    )}
+
+                    {/* GenVM Column */}
+                    {(mode === "table" || mode === "genvm") && (
+                      <div className={mode === "table" ? "border-l border-border/20 pl-6" : ""}>
+                        <div className="mb-1.5 flex items-center gap-2">
+                          <VerdictIcon score={row.genvm.score} />
+                          <span className="text-sm font-medium text-accent">
+                            {row.genvm.value}
+                          </span>
+                        </div>
+                        <p className="mb-2 text-xs leading-relaxed text-muted-foreground">
+                          {row.genvm.detail}
+                        </p>
+                        <ScoreDots score={row.genvm.score} variant="genvm" />
+                      </div>
+                    )}
+                  </motion.div>
+                )
+              })}
+            </div>
+
+            {/* Summary footer */}
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="rounded-lg border border-border/40 bg-card/20 p-4">
+                <div className="mb-1 flex items-center gap-2">
+                  <Cpu className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-mono text-[10px] tracking-widest text-muted-foreground">EVM TOTAL SCORE</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-foreground/70">
+                    {rows.reduce((s, r) => s + r.evm.score, 0)}
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground/60">/ {rows.length * 5}</span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
+                <div className="mb-1 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-accent" />
+                  <span className="font-mono text-[10px] tracking-widest text-accent/70">GENVM TOTAL SCORE</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-accent">
+                    {rows.reduce((s, r) => s + r.genvm.score, 0)}
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground/60">/ {rows.length * 5}</span>
+                </div>
               </div>
             </div>
-          ))}
-        </motion.div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ===== MOBILE CARDS (shown < md) ===== */}
+        <div className="flex flex-col gap-3 md:hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={mode}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col gap-3"
+            >
+              {rows.map((row) => (
+                <MobileRow key={row.category} row={row} mode={mode} />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </section>
   )
