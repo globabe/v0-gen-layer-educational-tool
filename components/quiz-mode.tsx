@@ -13,6 +13,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react"
+import Image from "next/image"
 
 interface QuizQuestion {
   id: number
@@ -224,8 +225,14 @@ export function QuizMode() {
               exit={{ opacity: 0, y: -20 }}
               className="rounded-xl border border-border bg-card/80 p-8 text-center backdrop-blur-sm md:p-12"
             >
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/15 glow-purple">
-                <Trophy className="h-10 w-10 text-primary" />
+              <div className="mx-auto mb-6">
+                <Image
+                  src="/images/mochi-idea.png"
+                  alt="Mochi having an idea"
+                  width={120}
+                  height={120}
+                  className="mx-auto h-28 w-28 drop-shadow-[0_0_20px_oklch(0.65_0.25_290_/_0.3)]"
+                />
               </div>
               <h3 className="mb-3 text-2xl font-bold text-foreground">
                 Ready to prove your knowledge?
@@ -413,8 +420,14 @@ export function QuizMode() {
                 const rank = getRank(score, shuffledQuestions.length)
                 return (
                   <>
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/15 glow-purple">
-                      <Trophy className="h-10 w-10 text-primary" />
+                    <div className="mx-auto mb-6">
+                      <Image
+                        src="/images/mochi-stonks.png"
+                        alt="Mochi celebrating"
+                        width={120}
+                        height={120}
+                        className="mx-auto h-28 w-28 drop-shadow-[0_0_20px_oklch(0.65_0.25_290_/_0.3)]"
+                      />
                     </div>
                     <h3 className="mb-2 text-2xl font-bold text-foreground">
                       Quiz Complete!

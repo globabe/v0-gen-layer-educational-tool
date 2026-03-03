@@ -1,17 +1,22 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Cpu, ExternalLink } from "lucide-react"
+import { ExternalLink } from "lucide-react"
+import Image from "next/image"
 
 export function Footer() {
   return (
     <footer className="border-t border-border/50 px-4 py-12">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center gap-6 text-center">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20">
-              <Cpu className="h-3.5 w-3.5 text-primary" />
-            </div>
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/images/mochi-love.png"
+              alt="Mochi showing love"
+              width={28}
+              height={28}
+              className="h-7 w-7"
+            />
             <span className="font-mono text-xs font-bold tracking-wider text-foreground">
               GENLAYER<span className="text-primary">.academy</span>
             </span>

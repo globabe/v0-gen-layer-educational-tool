@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Globe,
 } from "lucide-react"
+import Image from "next/image"
 
 interface FlowStep {
   id: number
@@ -326,9 +327,15 @@ export function ContractFlow() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-8 flex items-center justify-center gap-2 text-center"
+          className="mt-8 flex items-center justify-center gap-3 text-center"
         >
-          <Globe className="h-3.5 w-3.5 text-primary/50" />
+          <Image
+            src="/images/mochi-cookie.png"
+            alt="Mochi with a cookie"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+          />
           <span className="font-mono text-xs text-muted-foreground/50">
             GenLayer connects smart contracts directly to the internet and AI models
           </span>
